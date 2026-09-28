@@ -1,0 +1,9 @@
+{
+  "name": "devops-project-3",
+  "version": "1.0.0",
+  "description": "Simple Node.js DevOps application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
