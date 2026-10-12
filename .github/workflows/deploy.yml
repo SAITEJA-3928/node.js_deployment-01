@@ -1,4 +1,3 @@
-
 name: Node.js CI-CD
 
 on:
@@ -21,7 +20,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build application
         run: npm run build --if-present
@@ -30,15 +29,15 @@ jobs:
         run: npm test
 
       - name: Debug frontend JavaScript
-  run: |
-    echo "Commit being tested:"
-    git rev-parse HEAD
+        run: |
+          echo "Commit being tested:"
+          git rev-parse HEAD
 
-    echo "Actual script.js lines:"
-    sed -n '10,18l' script.js
+          echo "Actual script.js lines:"
+          sed -n '10,18l' script.js
 
-    echo "Checking JavaScript syntax:"
-    node --check script.js
+          echo "Checking JavaScript syntax:"
+          node --check script.js
 
   deploy:
     name: CD - Deploy to EC2
@@ -46,6 +45,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy frontend and backend
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -56,7 +58,6 @@ jobs:
             set -e
 
             echo "Starting deployment..."
-
             cd ~/node.js_deployment-01
 
             echo "Pulling latest code..."
