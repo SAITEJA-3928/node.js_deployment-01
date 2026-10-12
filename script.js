@@ -11,7 +11,7 @@ connectBtn.addEventListener("click", async () => {
         const response = await fetch("/api");
 
         if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
+            throw new Error("HTTP error: " + response.status);
         }
 
         const message = await response.text();
