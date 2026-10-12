@@ -29,8 +29,16 @@ jobs:
       - name: Test backend
         run: npm test
 
-      - name: Check frontend JavaScript
-        run: node --check script.js
+      - name: Debug frontend JavaScript
+  run: |
+    echo "Commit being tested:"
+    git rev-parse HEAD
+
+    echo "Actual script.js lines:"
+    sed -n '10,18l' script.js
+
+    echo "Checking JavaScript syntax:"
+    node --check script.js
 
   deploy:
     name: CD - Deploy to EC2
