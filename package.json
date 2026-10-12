@@ -4,7 +4,7 @@
   "description": "Simple Node.js DevOps application",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
     "test": "node --check server.js"
   }
 }
