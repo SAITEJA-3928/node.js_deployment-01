@@ -1,4 +1,4 @@
-```javascript
+
 const connectBtn = document.getElementById("connectBtn");
 const responseText = document.getElementById("response");
 const statusText = document.getElementById("status");
@@ -24,4 +24,3 @@ connectBtn.addEventListener("click", async () => {
         console.error(error);
     }
 });
-```
