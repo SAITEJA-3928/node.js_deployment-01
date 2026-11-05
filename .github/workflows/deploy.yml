@@ -102,9 +102,9 @@ jobs:
               echo "ℹ️  [2/6] Nginx not detected on host, skipping Nginx static sync."
             fi
 
-            # 3. Build optimized Docker image with BuildKit caching
+            # 3. Build optimized Docker image
             echo "🐳 [3/6] Building optimized Docker image..."
-            DOCKER_BUILDKIT=1 docker build -t my-node-app:latest .
+            docker build -t my-node-app:latest .
 
             # 4. Safe Pre-flight verification on a temporary test container
             echo "🧪 [4/6] Verifying new build health on test port..."
