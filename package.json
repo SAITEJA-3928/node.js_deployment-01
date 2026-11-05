@@ -1,10 +1,21 @@
 {
-  "name": "devops-project-3",
-  "version": "1.0.0",
-  "description": "Simple Node.js DevOps application",
+  "name": "devops-node-dashboard",
+  "version": "2.0.0",
+  "description": "Production-ready DevOps Node.js Application with Live Metrics & CI/CD",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js"
-  }
+    "dev": "node server.js",
+    "test": "node --check server.js && node --check script.js"
+  },
+  "keywords": [
+    "devops",
+    "docker",
+    "aws-ec2",
+    "github-actions",
+    "ci-cd",
+    "monitoring"
+  ],
+  "author": "Pavan Babu",
+  "license": "ISC"
 }

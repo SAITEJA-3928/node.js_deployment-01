@@ -1,42 +1,163 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Node.js Application</title>
+    <title>DevOps Telemetry Dashboard | Node.js + Docker</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <header>
-        <h2>My DevOps Project</h2>
-        <span>Node.js + Frontend</span>
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">⚡</span>
+            <div>
+                <h2>DevOps Mission Control</h2>
+                <span class="sub-brand">Production v2.0 • Containerized Engine</span>
+            </div>
+        </div>
+
+        <div class="system-status-pill" id="globalStatusPill">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="globalStatusText">INITIALIZING...</span>
+        </div>
     </header>
 
-    <main class="container">
-        <div class="card">
-            <div class="icon">🚀</div>
+    <!-- Main Container -->
+    <main class="dashboard-container">
 
-            <h1>Hello, Welcome!</h1>
-            <p>This frontend is connected to a Node.js backend.</p>
+        <!-- Top Banner: Hello Pavan Babu Message Box -->
+        <section class="banner-card">
+            <div class="banner-header">
+                <div>
+                    <span class="badge">BACKEND API SERVICE</span>
+                    <h1 id="heroTitle">DevOps Control Center</h1>
+                    <p class="subtitle" id="apiMessage">Click "Trigger API Call" to request data from the Node.js backend engine.</p>
+                </div>
+                <div class="banner-actions">
+                    <button class="btn btn-primary" id="callApiBtn">
+                        <span class="btn-icon">🚀</span> Trigger API Call
+                    </button>
+                    <button class="btn btn-outline" id="refreshHealthBtn">
+                        <span class="btn-icon">🔄</span> Refresh Telemetry
+                    </button>
+                </div>
+            </div>
+        </section>
 
-            <div class="message-box">
-                <h3>Backend Response</h3>
-                <p id="response">Click the button to connect.</p>
+        <!-- Live Telemetry Metrics Grid -->
+        <section class="metrics-grid">
+            <!-- Card 1: Server Health & Status -->
+            <div class="metric-card">
+                <div class="card-icon">🩺</div>
+                <div class="card-content">
+                    <span class="metric-label">Server Health</span>
+                    <h3 class="metric-value status-text" id="healthStatus">--</h3>
+                    <span class="metric-sub" id="envBadge">Env: Production</span>
+                </div>
             </div>
 
-            <button id="connectBtn">Connect to Backend</button>
+            <!-- Card 2: Server Uptime -->
+            <div class="metric-card">
+                <div class="card-icon">⏱️</div>
+                <div class="card-content">
+                    <span class="metric-label">Server Uptime</span>
+                    <h3 class="metric-value" id="uptimeValue">--</h3>
+                    <span class="metric-sub">Continuous Running Time</span>
+                </div>
+            </div>
 
-            <p id="status">Status: Not connected</p>
-        </div>
+            <!-- Card 3: Memory Usage -->
+            <div class="metric-card">
+                <div class="card-icon">🧠</div>
+                <div class="card-content">
+                    <span class="metric-label">Heap Memory Used</span>
+                    <h3 class="metric-value" id="memoryValue">-- MB</h3>
+                    <span class="metric-sub" id="rssMemorySub">RSS: -- MB</span>
+                </div>
+            </div>
+
+            <!-- Card 4: Network Latency / Ping -->
+            <div class="metric-card">
+                <div class="card-icon">📡</div>
+                <div class="card-content">
+                    <span class="metric-label">API Latency</span>
+                    <h3 class="metric-value" id="latencyValue">-- ms</h3>
+                    <span class="metric-sub">Round-trip Ping Time</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture & Diagnostics Section -->
+        <section class="details-grid">
+            <!-- System Diagnostics Table -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h3>🖥️ System Architecture</h3>
+                    <span class="badge-subtle">Container Runtime</span>
+                </div>
+                <div class="specs-list">
+                    <div class="spec-item">
+                        <span class="spec-key">Runtime Platform:</span>
+                        <span class="spec-val" id="specPlatform">Node.js 20 Alpine Linux</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-key">Node Engine:</span>
+                        <span class="spec-val" id="specNode">--</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-key">Process ID (PID):</span>
+                        <span class="spec-val" id="specPid">--</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-key">CPU Cores Available:</span>
+                        <span class="spec-val" id="specCpus">--</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-key">Deployment Target:</span>
+                        <span class="spec-val">AWS EC2 (Ubuntu) via Docker</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-key">Reverse Proxy:</span>
+                        <span class="spec-val">Nginx HTTP Server (Port 80 -> 3000)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Terminal Event Stream -->
+            <div class="panel-card console-panel">
+                <div class="panel-header">
+                    <div class="console-title">
+                        <div class="terminal-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <h3>Live Telemetry Stream</h3>
+                    </div>
+                    <div class="console-controls">
+                        <label class="auto-refresh-toggle">
+                            <input type="checkbox" id="autoRefreshToggle" checked>
+                            <span>Live Poll (5s)</span>
+                        </label>
+                        <button class="btn-clear" id="clearConsoleBtn">Clear</button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="terminalLog">
+                    <div class="log-line log-system">[SYS] Telemetry console mounted. Connecting to backend...</div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <footer>
-        <p>Deployed using Docker, AWS EC2 and CI/CD</p>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Built with <strong>Node.js</strong> • Containerized with <strong>Docker</strong> • Automated via <strong>GitHub Actions CI/CD</strong> • Hosted on <strong>AWS EC2</strong></p>
     </footer>
 
     <script src="script.js"></script>
 </body>
 </html>
-```
