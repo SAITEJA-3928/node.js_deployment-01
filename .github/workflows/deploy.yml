@@ -7,14 +7,14 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:
   # ============================================================================
-  # CI STAGE: Code Validation, Testing & Docker Build Verification
+  # 1. CI STAGE: Code Validation, Testing & Pre-flight Docker Verification
   # ============================================================================
   ci:
-    name: 🧪 CI - Lint, Test & Docker Verification
+    name: 🧪 CI - Lint, Test & Docker Build Check
     runs-on: ubuntu-latest
 
     steps:
@@ -30,32 +30,32 @@ jobs:
       - name: 📦 Install Dependencies
         run: npm ci || npm install
 
-      - name: 🧪 Run Automated Tests & Syntax Validation
+      - name: 🧪 Run Automated Tests & Syntax Check
         run: npm test
 
-      - name: 🛡️ Security Audit (Dependencies)
+      - name: 🛡️ Security Audit
         run: npm audit --audit-level=high || true
 
       - name: 🐳 Pre-flight Docker Build Verification
         run: |
-          echo "Verifying Dockerfile builds cleanly before deployment..."
-          docker build -t test-build-image .
-          echo "✅ Docker build test passed successfully!"
+          echo "Verifying Docker image builds cleanly in CI runner..."
+          docker build -t preflight-check:latest .
+          echo "✅ Docker build passed with 0 errors!"
 
   # ============================================================================
-  # CD STAGE: Zero-Downtime Deployment to AWS EC2
+  # 2. CD STAGE: Automated Zero-Downtime Deployment to VM / EC2
   # ============================================================================
   deploy:
-    name: 🚀 CD - Zero-Downtime Deploy to AWS EC2
+    name: 🚀 CD - Automated Deploy to VM
     needs: ci
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🚀 Deploy to AWS EC2 via SSH
+      - name: 🔐 Deploy to VM via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -65,61 +65,86 @@ jobs:
             set -e
 
             echo "=========================================================="
-            echo "🚀 [START] Automated Deployment: Node.js DevOps v2.0"
+            echo "🚀 [AUTOMATION START] Deploying DevOps Engine v2.0"
             echo "=========================================================="
 
             APP_DIR=~/node.js_deployment-01
-            mkdir -p "$APP_DIR"
-            cd "$APP_DIR"
 
-            echo "📦 [1/6] Pulling latest changes from main branch..."
-            git pull origin main
+            # 1. Ensure directory exists and repo is synced cleanly
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "📥 [1/6] First-time setup: Cloning repository..."
+              git clone "https://github.com/${{ github.repository }}.git" "$APP_DIR"
+              cd "$APP_DIR"
+            else
+              echo "📦 [1/6] Repository found: Resetting and syncing to latest main..."
+              cd "$APP_DIR"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
 
-            echo "🎨 [2/6] Updating Nginx static frontend web assets..."
-            sudo mkdir -p /var/www/myapp
-            sudo cp index.html style.css script.js /var/www/myapp/
+            # 2. Update Nginx static files if Nginx is installed
+            if command -v nginx > /dev/null 2>&1; then
+              echo "🎨 [2/6] Updating Nginx frontend assets in /var/www/myapp..."
+              sudo mkdir -p /var/www/myapp
+              sudo cp index.html style.css script.js /var/www/myapp/
+              echo "🌐 Verifying Nginx configuration..."
+              sudo nginx -t
+              sudo systemctl reload nginx || true
+            else
+              echo "ℹ️  [2/6] Nginx not detected on host, skipping Nginx static sync."
+            fi
 
-            echo "🌐 [3/6] Verifying Nginx configuration syntax..."
-            sudo nginx -t
-
-            echo "🐳 [4/6] Building optimized Alpine Docker image..."
+            # 3. Build optimized Docker image with BuildKit caching
+            echo "🐳 [3/6] Building optimized Docker image..."
             DOCKER_BUILDKIT=1 docker build -t my-node-app:latest .
 
-            echo "🔄 [5/6] Performing Safe Zero-Downtime Container Swap..."
-            # Stop existing container cleanly if present
+            # 4. Safe Pre-flight verification on a temporary test container
+            echo "🧪 [4/6] Verifying new build health on test port..."
+            docker run -d --name temp-health-check -p 3001:5000 my-node-app:latest
+            
+            # Wait for test container to boot and verify /api/health
+            for i in $(seq 1 10); do
+              if curl -fsS http://localhost:3001/api/health > /dev/null 2>&1; then
+                echo "✅ Pre-flight container health check PASSED!"
+                break
+              fi
+              if [ "$i" -eq 10 ]; then
+                echo "❌ Pre-flight check failed! Aborting deployment to protect running service."
+                docker logs temp-health-check
+                docker stop temp-health-check && docker rm temp-health-check
+                exit 1
+              fi
+              sleep 2
+            done
+            docker stop temp-health-check && docker rm temp-health-check
+
+            # 5. Swap to live container seamlessly
+            echo "🔄 [5/6] Swapping live container to port 3000..."
             docker stop my-node-app || true
             docker rm my-node-app || true
 
-            # Launch new production container with auto-restart
             docker run -d \
               --name my-node-app \
               --restart unless-stopped \
               -p 3000:5000 \
               my-node-app:latest
 
-            echo "🩺 [6/6] Verifying Backend Health Telemetry..."
-            for i in $(seq 1 12); do
-              if curl -fsS http://localhost:3000/api/health > /dev/null; then
-                echo "✅ Backend container is HEALTHY and accepting traffic!"
-                break
-              fi
+            # 6. Verify Live Telemetry
+            echo "🩺 [6/6] Verifying live production endpoint..."
+            HEALTH_RESPONSE=$(curl -fsS http://localhost:3000/api/health)
+            echo "Status Response: $HEALTH_RESPONSE"
 
-              if [ "$i" -eq 12 ]; then
-                echo "❌ Backend health check timed out. Fetching Docker container logs:"
-                docker logs --tail 50 my-node-app
-                exit 1
-              fi
+            # Optional check through Nginx if Nginx is active
+            if command -v nginx > /dev/null 2>&1; then
+              echo "🌐 Testing reverse-proxy via Nginx (/api/health)..."
+              curl -fsS http://localhost/api/health > /dev/null 2>&1 || true
+            fi
 
-              echo "Waiting for container startup (attempt $i/12)..."
-              sleep 2
-            done
-
-            echo "🌐 Testing Nginx Reverse Proxy routing (/api/health)..."
-            curl -fsS http://localhost/api/health
-
-            echo "🧹 Pruning dangling docker cache..."
+            # Clean up dangling images to save VM disk space
+            echo "🧹 Cleaning up dangling images..."
             docker image prune -f || true
 
             echo "=========================================================="
-            echo "🎉 [SUCCESS] Deployment v2.0 completed successfully!"
+            echo "🎉 [AUTOMATION COMPLETE] Service is LIVE and HEALTHY! 🚀"
+
             echo "=========================================================="

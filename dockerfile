@@ -13,7 +13,7 @@ ENV NODE_ENV=production
 ENV PORT=5000
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app 
 
 # Ensure non-root node user owns the working directory
 RUN chown -R node:node /app
