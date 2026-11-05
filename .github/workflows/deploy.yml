@@ -104,7 +104,17 @@ jobs:
 
             # 3. Build optimized Docker image
             echo "🐳 [3/6] Building optimized Docker image..."
-            docker build -t my-node-app:latest .
+            # If buildx is missing, install it or disable buildkit
+            if ! docker buildx version > /dev/null 2>&1; then
+              sudo apt-get update -y && sudo apt-get install -y docker-buildx-plugin docker-buildx || true
+            fi
+
+            if docker buildx version > /dev/null 2>&1; then
+              docker build -t my-node-app:latest .
+            else
+              echo "Using legacy builder (DOCKER_BUILDKIT=0)..."
+              DOCKER_BUILDKIT=0 docker build -t my-node-app:latest .
+            fi
 
             # 4. Safe Pre-flight verification on a temporary test container
             echo "🧪 [4/6] Verifying new build health on test port..."
