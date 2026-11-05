@@ -71,15 +71,23 @@ jobs:
             APP_DIR=~/node.js_deployment-01
 
             # 1. Ensure directory exists and repo is synced cleanly
-            if [ ! -d "$APP_DIR/.git" ]; then
-              echo "📥 [1/6] First-time setup: Cloning repository..."
-              git clone "https://github.com/${{ github.repository }}.git" "$APP_DIR"
-              cd "$APP_DIR"
-            else
-              echo "📦 [1/6] Repository found: Resetting and syncing to latest main..."
+            if [ -d "$APP_DIR/.git" ]; then
+              echo "📦 [1/6] Git repository found: Syncing to latest main..."
               cd "$APP_DIR"
               git fetch origin main
               git reset --hard origin/main
+            elif [ -d "$APP_DIR" ]; then
+              echo "📦 [1/6] Existing directory found without .git: Syncing repository..."
+              cd "$APP_DIR"
+              git init -b main || git init
+              git remote remove origin 2>/dev/null || true
+              git remote add origin "https://github.com/${{ github.repository }}.git"
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              echo "📥 [1/6] First-time setup: Cloning repository..."
+              git clone "https://github.com/${{ github.repository }}.git" "$APP_DIR"
+              cd "$APP_DIR"
             fi
 
             # 2. Update Nginx static files if Nginx is installed
